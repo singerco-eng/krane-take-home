@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --primary-muted: 221 83% 53%;
+    --primary-muted-foreground: 210 40% 98%;
+    --secondary: 215 27% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 215 20% 88%;
+    --muted-foreground: 215 16% 35%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 86%;
+    --input: 214 32% 86%;
+    --ring: 221 83% 53%;
+    --radius: 0.9rem;
+    --glass-subtle: hsl(0 0% 100% / 0.72);
+    --glass-intense: hsl(0 0% 100% / 0.88);
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(199 89% 48%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.9), hsl(210 40% 96% / 0.92));
+    --shadow-soft: 0 14px 40px -24px hsl(222 47% 11% / 0.28);
+    --shadow-glow: 0 0 24px hsl(221 83% 53% / 0.18);
+    --shadow-glow-intense: 0 0 34px hsl(199 89% 48% / 0.28);
+    --segmented-track: hsl(215 27% 91% / 0.9);
+    --segmented-inactive-foreground: hsl(215 16% 35%);
+    --segmented-active: hsl(0 0% 100% / 0.95);
+    --segmented-active-foreground: hsl(222 47% 11%);
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 32% 12%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 32% 12%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 8%;
+    --primary-muted: 217 91% 60%;
+    --primary-muted-foreground: 210 40% 98%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 24% 20%;
+    --muted-foreground: 215 20% 72%;
+    --accent: 191 91% 58%;
+    --accent-foreground: 222 47% 8%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 24% 24%;
+    --input: 217 24% 24%;
+    --ring: 217 91% 60%;
+    --glass-subtle: hsl(222 32% 14% / 0.72);
+    --glass-intense: hsl(222 32% 16% / 0.88);
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(191 91% 58%));
+    --gradient-card: linear-gradient(145deg, hsl(222 32% 14% / 0.9), hsl(222 47% 9% / 0.95));
+    --shadow-soft: 0 14px 40px -24px hsl(222 47% 3% / 0.7);
+    --shadow-glow: 0 0 24px hsl(217 91% 60% / 0.18);
+    --shadow-glow-intense: 0 0 34px hsl(191 91% 58% / 0.28);
+    --segmented-track: hsl(217 24% 18% / 0.9);
+    --segmented-inactive-foreground: hsl(215 20% 72%);
+    --segmented-active: hsl(222 32% 22% / 0.95);
+    --segmented-active-foreground: hsl(210 40% 96%);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    margin: 0;
+    min-width: 320px;
+    background-image:
+      radial-gradient(circle at top, hsl(var(--primary) / 0.18), transparent 36%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
