@@ -12,14 +12,3 @@ npm run dev
 ```
 
 Runs at `http://localhost:5173`.
-
-### Build
-
-```bash
-npm run build
-npm run preview
-```
-
-### Environment
-
-Copy `.env.local.example` to `.env.local` and fill in the Supabase keys (optional — prototype runs without them).

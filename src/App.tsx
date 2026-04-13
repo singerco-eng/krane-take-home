@@ -123,6 +123,10 @@ const currentStateLog = [...originalLog].sort((left, right) =>
   left.specSection.localeCompare(right.specSection, undefined, { numeric: true }),
 );
 
+const revisedCurrentStateLog = [...revisedLog].sort((left, right) =>
+  left.specSection.localeCompare(right.specSection, undefined, { numeric: true }),
+);
+
 function computeChanges(
   original: ProcurementItem[],
   revised: ProcurementItem[],
@@ -576,7 +580,13 @@ function RowActionMenu({
   );
 }
 
-function CurrentStateTable({ items }: { items: ProcurementItem[] }) {
+function CurrentStateTable({
+  items,
+  itemChanges,
+}: {
+  items: ProcurementItem[];
+  itemChanges: Map<number, ItemChange> | null;
+}) {
   return (
     <Table>
       <TableHeader>
@@ -587,13 +597,39 @@ function CurrentStateTable({ items }: { items: ProcurementItem[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.specSection}</TableCell>
-            <TableCell>{item.description}</TableCell>
-            <TableCell className="max-w-md text-sm text-muted-foreground">{item.basisOfDesign}</TableCell>
-          </TableRow>
-        ))}
+        {items.map((item) => {
+          const change = itemChanges?.get(item.id);
+
+          return (
+            <TableRow
+              key={item.id}
+              className={cn(
+                change?.type === "added" && "bg-emerald-500/5",
+                change?.type === "removed" && "bg-red-500/5 opacity-60",
+                change?.type === "modified" && "bg-amber-500/5",
+              )}
+            >
+              <TableCell className="font-medium">{item.specSection}</TableCell>
+              <TableCell>
+                <span className="flex items-center gap-2">
+                  {item.description}
+                  {change?.type === "added" && (
+                    <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 text-xs">
+                      <Plus className="mr-0.5 h-3 w-3" />New
+                    </Badge>
+                  )}
+                  {change?.type === "removed" && (
+                    <Badge variant="outline" className="border-red-500/50 text-red-500 text-xs">Removed</Badge>
+                  )}
+                  {change?.type === "modified" && (
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 text-xs">Changed</Badge>
+                  )}
+                </span>
+              </TableCell>
+              <TableCell className="max-w-md text-sm text-muted-foreground">{item.basisOfDesign}</TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
@@ -744,6 +780,7 @@ function App() {
   const [useRevisedSpec, setUseRevisedSpec] = useState(false);
 
   const activeEnrichedLog = useRevisedSpec ? revisedEnrichedLog : baseEnrichedLog;
+  const activeCurrentStateLog = useRevisedSpec ? revisedCurrentStateLog : currentStateLog;
 
   const itemChanges = useMemo(
     () => (useRevisedSpec ? computeChanges(originalLog, revisedLog) : null),
@@ -863,20 +900,18 @@ function App() {
             <TabsTrigger value="future">Future State</TabsTrigger>
           </TabsList>
           <div className="flex flex-wrap items-center justify-end gap-3">
-            {viewMode === "future" && (
-              <Button
-                variant={useRevisedSpec ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUseRevisedSpec(!useRevisedSpec)}
-              >
-                {useRevisedSpec ? "Viewing Addendum #2" : "Load Revised Spec"}
-              </Button>
-            )}
+            <Button
+              variant={useRevisedSpec ? "default" : "outline"}
+              size="sm"
+              onClick={() => setUseRevisedSpec(!useRevisedSpec)}
+            >
+              {useRevisedSpec ? "Viewing Addendum #2" : "Load Revised Spec"}
+            </Button>
             <Button
               variant="gradient"
               onClick={() =>
                 viewMode === "current"
-                  ? downloadCurrentStateCsv(currentStateLog)
+                  ? downloadCurrentStateCsv(activeCurrentStateLog)
                   : downloadCurrentLogCsv(visibleLog)
               }
             >
@@ -896,9 +931,9 @@ function App() {
           {viewMode === "current" ? (
             <div className="space-y-6">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{currentStateLog.length}</span> items sorted by spec section.
+                <span className="font-medium text-foreground">{activeCurrentStateLog.length}</span> items sorted by spec section.
               </p>
-              <CurrentStateTable items={currentStateLog} />
+              <CurrentStateTable items={activeCurrentStateLog} itemChanges={itemChanges} />
             </div>
           ) : (
             <div className="space-y-6">
