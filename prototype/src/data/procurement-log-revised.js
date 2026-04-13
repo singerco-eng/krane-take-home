@@ -259,18 +259,6 @@ export const PROCUREMENT_LOG = [
   // REMOVED: Duct Insulation (id 19) — consolidated into Metal Ductwork line item
   // REMOVED: Identification Devices (id 20) — consolidated into trade-specific line items
   {
-    id: 19,
-    specSection: "230713",
-    description: "Duct Insulation",
-    basisOfDesign: "Mineral fiber, fiberglass — ASTM C553, Type I",
-    leadTimeWeeks: "1-3",
-    riskTier: "COMMODITY",
-    flags: [],
-    urgencyRank: 20,
-    actionTimeframe: "SCHEDULE_LATER"
-  },
-  // Identification Devices (formerly id 20) removed — consolidated into respective trade items
-  {
     id: 21,
     specSection: "231113",
     description: "Duplex Fuel Transfer Pump Set and Controls",

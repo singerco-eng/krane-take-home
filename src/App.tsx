@@ -601,14 +601,7 @@ function CurrentStateTable({
           const change = itemChanges?.get(item.id);
 
           return (
-            <TableRow
-              key={item.id}
-              className={cn(
-                change?.type === "added" && "bg-emerald-500/5",
-                change?.type === "removed" && "bg-red-500/5 opacity-60",
-                change?.type === "modified" && "bg-amber-500/5",
-              )}
-            >
+            <TableRow key={item.id} className={cn(change?.type === "removed" && "opacity-50")}>
               <TableCell className="font-medium">{item.specSection}</TableCell>
               <TableCell>
                 <span className="flex items-center gap-2">
@@ -621,12 +614,14 @@ function CurrentStateTable({
                   {change?.type === "removed" && (
                     <Badge variant="outline" className="border-red-500/50 text-red-500 text-xs">Removed</Badge>
                   )}
-                  {change?.type === "modified" && (
-                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 text-xs">Changed</Badge>
-                  )}
                 </span>
               </TableCell>
-              <TableCell className="max-w-md text-sm text-muted-foreground">{item.basisOfDesign}</TableCell>
+              <TableCell className="max-w-md text-sm text-muted-foreground">
+                {item.basisOfDesign}
+                {change?.type === "modified" && change.fields?.includes("basisOfDesign") && (
+                  <span className="mt-1 block text-xs text-amber-600">Spec changed</span>
+                )}
+              </TableCell>
             </TableRow>
           );
         })}
@@ -706,13 +701,7 @@ function ProcurementTable({
           const change = itemChanges?.get(item.id);
 
           return (
-            <TableRow
-              key={item.id}
-              className={cn(
-                change?.type === "added" && "bg-emerald-500/5",
-                change?.type === "removed" && "bg-red-500/5 opacity-60",
-              )}
-            >
+            <TableRow key={item.id} className={cn(change?.type === "removed" && "opacity-50")}>
               <TableCell className="font-medium">{item.specSection}</TableCell>
               <TableCell className="font-medium text-foreground">
                 <span className="flex items-center gap-2">
@@ -779,13 +768,22 @@ function App() {
   const [selectedSub, setSelectedSub] = useState<string>("all");
   const [useRevisedSpec, setUseRevisedSpec] = useState(false);
 
-  const activeEnrichedLog = useRevisedSpec ? revisedEnrichedLog : baseEnrichedLog;
-  const activeCurrentStateLog = useRevisedSpec ? revisedCurrentStateLog : currentStateLog;
-
   const itemChanges = useMemo(
     () => (useRevisedSpec ? computeChanges(originalLog, revisedLog) : null),
     [useRevisedSpec],
   );
+
+  const activeEnrichedLog = useMemo(() => {
+    if (!useRevisedSpec || !itemChanges) return baseEnrichedLog;
+    const removedItems = baseEnrichedLog.filter((item) => itemChanges.get(item.id)?.type === "removed");
+    return [...revisedEnrichedLog, ...removedItems];
+  }, [useRevisedSpec, itemChanges]);
+
+  const activeCurrentStateLog = useMemo(() => {
+    if (!useRevisedSpec || !itemChanges) return currentStateLog;
+    const removedItems = currentStateLog.filter((item) => itemChanges.get(item.id)?.type === "removed");
+    return [...revisedCurrentStateLog, ...removedItems];
+  }, [useRevisedSpec, itemChanges]);
 
   const divisionOptions = useMemo(
     () =>
