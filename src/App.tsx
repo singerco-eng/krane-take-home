@@ -177,7 +177,14 @@ function escapeCsvValue(value: string) {
   return `"${value.replaceAll('"', '""')}"`;
 }
 
-function downloadCurrentLogCsv(items: EnrichedProcurementItem[]) {
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-|-$/g, "");
+}
+
+function downloadCurrentLogCsv(items: EnrichedProcurementItem[], contextLabel?: string) {
   const rows = items.map((item) =>
     [
       item.specSection,
@@ -195,9 +202,10 @@ function downloadCurrentLogCsv(items: EnrichedProcurementItem[]) {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
+  const suffix = contextLabel ? `-${slugify(contextLabel)}` : "";
 
   link.href = url;
-  link.download = "griffin-hospital-enriched-log.csv";
+  link.download = `griffin-hospital${suffix}.csv`;
   link.click();
 
   URL.revokeObjectURL(url);
@@ -375,12 +383,14 @@ function buildGroupedLog(items: EnrichedProcurementItem[], groupBy: GroupBy) {
 
 function SendToSubModal({
   isOpen,
-  targetCount,
+  items,
+  contextLabel,
   onAssign,
   onClose,
 }: {
   isOpen: boolean;
-  targetCount: number;
+  items: EnrichedProcurementItem[];
+  contextLabel: string;
   onAssign: (subName: string) => void;
   onClose: () => void;
 }) {
@@ -405,12 +415,16 @@ function SendToSubModal({
     onClose();
   }
 
+  function handleExport() {
+    downloadCurrentLogCsv(items, contextLabel);
+  }
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-50 w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-foreground">Send to Sub</h3>
+          <h3 className="text-base font-semibold text-foreground">Assign Sub</h3>
           <button
             type="button"
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -419,8 +433,9 @@ function SendToSubModal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Assign <span className="font-medium text-foreground">{targetCount}</span> item{targetCount !== 1 && "s"} to a subcontractor.
+        <p className="mb-3 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{contextLabel}</span>
+          {" "}&middot; {items.length} item{items.length !== 1 && "s"}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -431,13 +446,18 @@ function SendToSubModal({
             onChange={(event) => setSubName(event.target.value)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition-colors focus:ring-2 focus:ring-ring"
           />
-          <div className="flex justify-end gap-2">
-            <Button type="button" size="sm" variant="ghost" onClick={onClose}>
-              Cancel
+          <div className="flex items-center justify-between">
+            <Button type="button" size="sm" variant="outline" onClick={handleExport}>
+              Export {items.length} to CSV
             </Button>
-            <Button type="submit" size="sm" disabled={!subName.trim()}>
-              Assign
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" disabled={!subName.trim()}>
+                Assign
+              </Button>
+            </div>
           </div>
         </form>
       </div>
@@ -447,11 +467,13 @@ function SendToSubModal({
 }
 
 function SendToSubTrigger({
-  targetCount,
+  items,
+  contextLabel,
   onAssign,
   className,
 }: {
-  targetCount: number;
+  items: EnrichedProcurementItem[];
+  contextLabel: string;
   onAssign: (subName: string) => void;
   className?: string;
 }) {
@@ -463,17 +485,18 @@ function SendToSubTrigger({
         size="sm"
         variant="outline"
         onClick={() => setIsOpen(true)}
-        disabled={targetCount === 0}
+        disabled={items.length === 0}
       >
         <Send className="mr-2 h-3.5 w-3.5" />
-        Send to Sub
-        {targetCount > 0 && (
-          <Badge variant="secondary" className="ml-2">{targetCount}</Badge>
+        Assign Sub
+        {items.length > 0 && (
+          <Badge variant="secondary" className="ml-2">{items.length}</Badge>
         )}
       </Button>
       <SendToSubModal
         isOpen={isOpen}
-        targetCount={targetCount}
+        items={items}
+        contextLabel={contextLabel}
         onAssign={onAssign}
         onClose={() => setIsOpen(false)}
       />
@@ -482,10 +505,12 @@ function SendToSubTrigger({
 }
 
 function SubCell({
+  item,
   sub,
   onAssignSub,
   onRemoveSub,
 }: {
+  item: EnrichedProcurementItem;
   sub: string | undefined;
   onAssignSub: (subName: string) => void;
   onRemoveSub: () => void;
@@ -508,7 +533,8 @@ function SubCell({
       </div>
       <SendToSubModal
         isOpen={modalOpen}
-        targetCount={1}
+        items={[item]}
+        contextLabel={item.description}
         onAssign={onAssignSub}
         onClose={() => setModalOpen(false)}
       />
@@ -560,7 +586,7 @@ function RowActionMenu({
               onClick={() => { setIsOpen(false); onSendToSub(); }}
             >
               <Send className="h-3.5 w-3.5" />
-              {hasSubAssigned ? "Reassign" : "Send to Sub"}
+              {hasSubAssigned ? "Reassign" : "Assign Sub"}
             </button>
             {hasSubAssigned && (
               <button
@@ -742,6 +768,7 @@ function ProcurementTable({
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">{item.divisionLabel}</TableCell>
               <SubCell
+                item={item}
                 sub={sub}
                 onAssignSub={(subName) => onAssignSub([item.id], subName)}
                 onRemoveSub={() => onRemoveSub(item.id)}
@@ -840,6 +867,24 @@ function App() {
     restrictionFilter !== "all" ||
     ownerApprovalFilter !== "all" ||
     selectedSub !== "all";
+
+  const filterContextLabel = useMemo(() => {
+    if (!hasActiveFilters) return "All items";
+    const parts: string[] = [];
+    if (selectedDivision !== "all") parts.push(selectedDivision);
+    if (leadTimeFilter !== "all") {
+      const option = leadTimeFilterOptions.find((o) => o.value === leadTimeFilter);
+      if (option) parts.push(option.label);
+    }
+    if (restrictionFilter === "restricted") parts.push("Restricted");
+    if (ownerApprovalFilter === "required") parts.push("Owner approval required");
+    if (selectedSub !== "all") {
+      if (selectedSub === "assigned") parts.push("Assigned");
+      else if (selectedSub === "unassigned") parts.push("Unassigned");
+      else parts.push(selectedSub);
+    }
+    return parts.join(" · ");
+  }, [hasActiveFilters, selectedDivision, leadTimeFilter, restrictionFilter, ownerApprovalFilter, selectedSub]);
 
   function toggleSort(nextKey: SortKey) {
     if (nextKey === sortKey) {
@@ -1038,7 +1083,8 @@ function App() {
                     </p>
                     {groupBy === "none" && (
                       <SendToSubTrigger
-                        targetCount={visibleLog.length}
+                        items={visibleLog}
+                        contextLabel={filterContextLabel}
                         onAssign={(subName) => assignSubToItems(visibleLog.map((item) => item.id), subName)}
                       />
                     )}
@@ -1092,7 +1138,8 @@ function App() {
                             </button>
                           </CollapsibleTrigger>
                           <SendToSubTrigger
-                            targetCount={group.items.length}
+                            items={group.items}
+                            contextLabel={group.label}
                             onAssign={(subName) => assignSubToItems(group.items.map((item) => item.id), subName)}
                           />
                         </div>
