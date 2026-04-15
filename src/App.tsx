@@ -610,7 +610,7 @@ function CurrentStateTable({
   items,
   itemChanges,
 }: {
-  items: ProcurementItem[];
+  items: EnrichedProcurementItem[];
   itemChanges: Map<number, ItemChange> | null;
 }) {
   return (
@@ -620,6 +620,7 @@ function CurrentStateTable({
           <TableHead>Spec Section</TableHead>
           <TableHead>Description</TableHead>
           <TableHead>Basis of Design</TableHead>
+          <TableHead>Division</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -648,6 +649,7 @@ function CurrentStateTable({
                   <span className="mt-1 block text-xs text-amber-600">Spec changed</span>
                 )}
               </TableCell>
+              <TableCell className="text-sm text-muted-foreground">{item.divisionLabel}</TableCell>
             </TableRow>
           );
         })}
@@ -974,9 +976,9 @@ function App() {
           {viewMode === "current" ? (
             <div className="space-y-6">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{activeCurrentStateLog.length}</span> items sorted by spec section.
+                <span className="font-medium text-foreground">{activeEnrichedLog.length}</span> items sorted by spec section.
               </p>
-              <CurrentStateTable items={activeCurrentStateLog} itemChanges={itemChanges} />
+              <CurrentStateTable items={activeEnrichedLog} itemChanges={itemChanges} />
             </div>
           ) : (
             <div className="space-y-6">
